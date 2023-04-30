@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgis/postgis:15-master
+    restart: always
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - dbbackups:/pg_backups
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    stdin_open: true
+    #ports:
+    #  - "15432:5432"
+    networks:
+      geo:
+        ipv4_address: 10.5.0.2
+
+  geoserver:
+    image: geoserver_war
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./geoserver_data:/geoserver_data/data
+      - backup-restore:/backup_restore
+    depends_on:
+      - db
+    restart: on-failure
+    networks:
+      geo:
+        ipv4_address: 10.5.0.3
+
+volumes: 
+  dbdata:
+  dbbackups:
+  backup-restore:
+
+
+networks:
+  geo:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
