@@ -160,6 +160,23 @@ else
     echo "✅ Workspace '$WORKSPACE' already exists."
 fi
 
+# --- 3️⃣ Create demo_workspace (if not exists) ---
+echo "📁 Checking for demo_workspace..."
+if ! curl -sf -u "$GEOSERVER_USER:$GEOSERVER_PASS" "$GEOSERVER_REST/workspaces/demo_workspace.json" > /dev/null 2>&1; then
+    echo "📁 Creating demo_workspace..."
+    if STATUS=$(geoserver_rest POST "workspaces" "{\"workspace\": {\"name\": \"demo_workspace\"}}"); then
+        if [ "$STATUS" = "201" ]; then
+            echo "✅ demo_workspace created successfully."
+        else
+            echo "⚠️ demo_workspace creation returned HTTP $STATUS"
+        fi
+    else
+        echo "❌ Failed to create demo_workspace"
+    fi
+else
+    echo "✅ demo_workspace already exists."
+fi
+
 # --- 4️⃣ Create datastore (if not exists) ---
 echo "🗄️ Checking for datastore '$DATASTORE'..."
 if ! curl -sf -u "$GEOSERVER_USER:$GEOSERVER_PASS" "$GEOSERVER_REST/workspaces/$WORKSPACE/datastores/$DATASTORE.json" > /dev/null 2>&1; then
