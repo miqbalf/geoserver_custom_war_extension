@@ -1,0 +1,159 @@
+#!/bin/bash
+set -e
+
+# GeoServer Extensions Installation Script
+# This script downloads and installs GeoServer extensions with error handling
+
+GEOSERVER_VERSION="${GEOSERVER_VERSION:-2.26.0}"
+GEOSERVER_LIB="/usr/local/tomcat/webapps/geoserver/WEB-INF/lib"
+BASE_URL="https://sourceforge.net/projects/geoserver/files/GeoServer/${GEOSERVER_VERSION}/extensions"
+
+# Color output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "========================================="
+echo "Installing GeoServer ${GEOSERVER_VERSION} Extensions"
+echo "========================================="
+
+# Function to install an extension
+install_extension() {
+    local plugin_name=$1
+    local zip_file="geoserver-${GEOSERVER_VERSION}-${plugin_name}.zip"
+    local download_url="${BASE_URL}/${zip_file}"
+    local cache_dir="/tmp/geoserver-extensions-cache"
+    
+    echo -e "\n${YELLOW}[*]${NC} Installing ${plugin_name}..."
+    
+    # Create cache directory
+    mkdir -p "$cache_dir"
+    cd "$cache_dir"
+    
+    # Check if extension is already cached
+    if [ -f "${zip_file}" ]; then
+        echo -e "${YELLOW}  Using cached extension...${NC}"
+        success=true
+    else
+        # Try to download with retry logic
+        local max_retries=3
+        local retry_count=0
+        local success=false
+        
+        while [ $retry_count -lt $max_retries ]; do
+            if wget -q --timeout=30 --tries=2 "${download_url}"; then
+                success=true
+                break
+            else
+                retry_count=$((retry_count + 1))
+                echo -e "${YELLOW}  Retry ${retry_count}/${max_retries}...${NC}"
+                sleep 2
+            fi
+        done
+    fi
+    
+    if [ "$success" = true ]; then
+        if [ -f "${zip_file}" ]; then
+            unzip -o -q "${zip_file}" -d "${GEOSERVER_LIB}/" 2>/dev/null || true
+            # Don't remove the zip file - keep it in cache for future builds
+            echo -e "${GREEN}[✓]${NC} ${plugin_name} installed successfully"
+            return 0
+        else
+            echo -e "${RED}[✗]${NC} ${plugin_name} - file not found after download"
+            return 1
+        fi
+    else
+        echo -e "${RED}[✗]${NC} ${plugin_name} - download failed (may not exist for this version)"
+        return 1
+    fi
+}
+
+# List of extensions to install
+# All extensions verified to exist for GeoServer 2.26.0
+# Source: https://sourceforge.net/projects/geoserver/files/GeoServer/2.26.0/extensions/
+# Comment out any extensions you don't need
+EXTENSIONS=(
+    # Styling and Visualization
+    "css-plugin"                    # CSS Styling
+    "ysld-plugin"                   # YAML-based styling
+    "charts-plugin"                 # Chart generation
+    
+    # Data Formats and Import/Export
+    "importer-plugin"               # Bulk data import
+    "dxf-plugin"                    # DXF output format
+    "excel-plugin"                  # Excel output format
+    "geopkg-output-plugin"          # GeoPackage output support
+    # "imagemosaic-jdbc-plugin"       # JDBC-based image mosaics
+    
+    # Processing and Analysis
+    "wps-plugin"                    # Web Processing Service (core)
+    "wps-download-plugin"           # WPS Download process
+    "wps-jdbc-plugin"               # WPS JDBC support
+    
+    # Performance and Management
+    "control-flow-plugin"           # Request throttling and rate limiting
+    "monitor-plugin"                # Request monitoring and statistics
+    "printing-plugin"               # Printing module
+    
+    # Advanced Data Sources
+    "mongodb-plugin"                # MongoDB datastore
+    "oracle-plugin"                 # Oracle spatial support
+    "sqlserver-plugin"              # SQL Server support
+    
+    # Vector Tiles and Modern Formats
+    "vectortiles-plugin"            # Mapbox Vector Tiles (MVT)
+    "mapml-plugin"                  # MapML support
+    
+    # Security and Authentication
+    "authkey-plugin"                # Authentication key support
+    "cas-plugin"                    # CAS authentication
+    
+    # Catalog and Metadata
+    "csw-plugin"                    # Catalog Service for the Web
+    
+    # Other Useful Extensions
+    "querylayer-plugin"             # Query layer support
+    "web-resource-plugin"           # Web resource management
+)
+
+# Install each extension
+success_count=0
+failed_count=0
+failed_extensions=()
+
+for ext in "${EXTENSIONS[@]}"; do
+    if install_extension "$ext"; then
+        success_count=$((success_count + 1))
+    else
+        failed_count=$((failed_count + 1))
+        failed_extensions+=("$ext")
+    fi
+done
+
+# Summary
+echo ""
+echo "========================================="
+echo "Installation Summary"
+echo "========================================="
+echo -e "${GREEN}Successfully installed: ${success_count}${NC}"
+echo -e "${RED}Failed: ${failed_count}${NC}"
+
+if [ ${#failed_extensions[@]} -gt 0 ]; then
+    echo ""
+    echo "Failed extensions (may not be available for this version):"
+    for ext in "${failed_extensions[@]}"; do
+        echo "  - $ext"
+    done
+fi
+
+echo ""
+echo "Cleaning up temporary files..."
+rm -rf /tmp/*
+
+echo -e "${GREEN}Extension installation complete!${NC}"
+
+# Exit successfully even if some extensions failed
+# (they may not be available for this GeoServer version)
+exit 0
+

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<global>
+    <settings>
+        <id>SettingsInfoImpl--570a3f8:15c6b9af14f:-7ffc</id>
+        <contact>
+            <addressCity>{{ contact_city | default('Jakarta') }}</addressCity>
+            <addressCountry>{{ contact_country | default('Indonesia') }}</addressCountry>
+            <addressType>Work</addressType>
+            <contactEmail>{{ contact_email | default('admin@gis-carbon-ai.com') }}</contactEmail>
+            <contactOrganization>{{ contact_organization | default('GIS Carbon AI') }}</contactOrganization>
+            <contactPerson>{{ contact_person | default('Administrator') }}</contactPerson>
+            <contactPosition>{{ contact_position | default('System Administrator') }}</contactPosition>
+        </contact>
+        <charset>UTF-8</charset>
+        <coverageAccess>
+            <allowGlobalAccess>true</allowGlobalAccess>
+        </coverageAccess>
+        <cors>
+            <allowCredentials>true</allowCredentials>
+            <allowHeaders>{{ cors_headers | default('*') }}</allowHeaders>
+            <allowMethods>{{ cors_methods | default('GET,POST,PUT,DELETE,HEAD,OPTIONS') }}</allowMethods>
+            <allowOrigins>{{ cors_origins | default('*') }}</allowOrigins>
+            <enabled>{{ cors_enabled | default('true') }}</enabled>
+        </cors>
+        <featureTypeCacheSize>0</featureTypeCacheSize>
+        <globalServices>true</globalServices>
+        <id>SettingsInfoImpl--570a3f8:15c6b9af14f:-7ffc</id>
+        <jai>
+            <allowInterpolation>true</allowInterpolation>
+            <recycling>true</recycling>
+        </jai>
+        <localWorkspaceIncludesPrefix>false</localWorkspaceIncludesPrefix>
+        <metadata>
+            <link>http://geoserver.org</link>
+            <title>{{ metadata_title | default('GIS Carbon AI GeoServer') }}</title>
+        </metadata>
+        <numDecimals>4</numDecimals>
+        <onlineResource>http://geoserver.org</onlineResource>
+        <proxyBaseUrl>{{ proxy_base_url | default('http://localhost:8080/geoserver') }}</proxyBaseUrl>
+        <schemaBaseUrl>http://schemas.opengis.net</schemaBaseUrl>
+        <showCreatedTimeColumnsInAdminList>false</showCreatedTimeColumnsInAdminList>
+        <showModifiedTimeColumnsInAdminList>false</showModifiedTimeColumnsInAdminList>
+        <useHeadersProxyURL>false</useHeadersProxyURL>
+        <verbose>false</verbose>
+        <verboseExceptions>false</verboseExceptions>
+    </settings>
+</global>
