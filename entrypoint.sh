@@ -51,6 +51,57 @@ run_post_startup() {
     # fi
 }
 
+# Configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
+# if enabled, this will add the filter definitions
+# to the end of the web.xml
+# (this will only happen if our filter has not yet been added before)
+if [ "${GEOSERVER_CORS_ENABLED}" = "true" ] || [ "${GEOSERVER_CORS_ENABLED}" = "True" ]; then
+  if ! grep -q DockerGeoServerCorsFilter "/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml"; then
+    echo "Enable CORS for /usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml"
+    echo "CORS Configuration:"
+    echo "  - Origins: ${GEOSERVER_CORS_ALLOWED_ORIGINS:-*}"
+    echo "  - Methods: ${GEOSERVER_CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,HEAD,OPTIONS}"
+    echo "  - Headers: ${GEOSERVER_CORS_ALLOWED_HEADERS:-*}"
+    echo "  - Exposed Headers: ${GEOSERVER_CORS_EXPOSED_HEADERS:-Access-Control-Allow-Origin,Access-Control-Allow-Credentials}"
+    echo "  - Support Credentials: ${GEOSERVER_CORS_SUPPORT_CREDENTIALS:-false}"
+    echo "  - Preflight Max Age: ${GEOSERVER_CORS_PREFLIGHT_MAXAGE:-10}"
+    
+    sed -i "\:</web-app>:i\\
+    <filter>\n\
+      <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
+      <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>\n\
+      <init-param>\n\
+          <param-name>cors.allowed.origins</param-name>\n\
+          <param-value>${GEOSERVER_CORS_ALLOWED_ORIGINS:-*}</param-value>\n\
+      </init-param>\n\
+      <init-param>\n\
+          <param-name>cors.allowed.methods</param-name>\n\
+          <param-value>${GEOSERVER_CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,HEAD,OPTIONS}</param-value>\n\
+      </init-param>\n\
+      <init-param>\n\
+        <param-name>cors.allowed.headers</param-name>\n\
+        <param-value>${GEOSERVER_CORS_ALLOWED_HEADERS:-*}</param-value>\n\
+      </init-param>\n\
+      <init-param>\n\
+        <param-name>cors.exposed.headers</param-name>\n\
+        <param-value>${GEOSERVER_CORS_EXPOSED_HEADERS:-Access-Control-Allow-Origin,Access-Control-Allow-Credentials}</param-value>\n\
+      </init-param>\n\
+      <init-param>\n\
+        <param-name>cors.support.credentials</param-name>\n\
+        <param-value>${GEOSERVER_CORS_SUPPORT_CREDENTIALS:-false}</param-value>\n\
+      </init-param>\n\
+      <init-param>\n\
+        <param-name>cors.preflight.maxage</param-name>\n\
+        <param-value>${GEOSERVER_CORS_PREFLIGHT_MAXAGE:-10}</param-value>\n\
+      </init-param>\n\
+    </filter>\n\
+    <filter-mapping>\n\
+      <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
+      <url-pattern>/*</url-pattern>\n\
+    </filter-mapping>" "/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml";
+  fi
+fi
+
 # Start Tomcat (GeoServer) in background
 catalina.sh run &
 TOMCAT_PID=$!

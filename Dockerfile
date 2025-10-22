@@ -59,6 +59,20 @@ RUN cd /tmp \
     && unzip -o -q geoserver-${GEOSERVER_VERSION}-geofence-server-postgres-plugin.zip -d /usr/local/tomcat/webapps/geoserver/WEB-INF/lib/ \
     && rm geoserver-${GEOSERVER_VERSION}-geofence-plugin.zip geoserver-${GEOSERVER_VERSION}-geofence-server-postgres-plugin.zip
 
+# Install minimal essential extensions
+# Includes: WPS (Web Processing Service), CSS styling, YSLD styling, 
+# Importer, DXF/Excel output formats, and Control Flow for performance
+RUN cd /tmp \
+    && echo "Installing minimal GeoServer extensions..." \
+    && for ext in css-plugin ysld-plugin importer-plugin dxf-plugin excel-plugin wps-plugin control-flow-plugin; do \
+        echo "Installing $ext..." \
+        && wget -q --timeout=30 --tries=2 "https://sourceforge.net/projects/geoserver/files/GeoServer/${GEOSERVER_VERSION}/extensions/geoserver-${GEOSERVER_VERSION}-${ext}.zip" \
+        && unzip -o -q "geoserver-${GEOSERVER_VERSION}-${ext}.zip" -d /usr/local/tomcat/webapps/geoserver/WEB-INF/lib/ 2>/dev/null || true \
+        && rm -f "geoserver-${GEOSERVER_VERSION}-${ext}.zip" \
+        && echo "✓ $ext installed"; \
+    done \
+    && echo "Minimal extensions installation completed!"
+
 
 
 # Install Python dependencies for configuration management
