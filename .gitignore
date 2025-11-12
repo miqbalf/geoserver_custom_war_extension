@@ -1,3 +1,7 @@
 ./geoserver_data/
 ./geoserver_data/*
 ./geoserver_data
+./data
+./data/*
+data/
+data/*
