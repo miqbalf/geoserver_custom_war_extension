@@ -1,3 +1,5 @@
+.env
+
 ./geoserver_data/
 ./geoserver_data/*
 ./geoserver_data
@@ -6,4 +8,3 @@
 data/
 data/*
 config/gwc/**
-.env
